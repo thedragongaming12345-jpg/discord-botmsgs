@@ -75,3 +75,35 @@ client.on("interactionCreate", async interaction => {
 });
 
 client.login(process.env.TOKEN);
+
+const { Client, GatewayIntentBits } = require('discord.js');
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.DirectMessages
+    ],
+    partials: ['CHANNEL'] // needed for DMs
+});
+
+client.on('ready', () => {
+    console.log(`${client.user.tag} is online!`);
+});
+
+client.on('messageCreate', message => {
+    // Ignore bot messages
+    if (message.author.bot) return;
+
+    // Check if it's a DM
+    if (message.channel.type === 1) { // 1 = DMChannel
+        message.reply('Hello! I can respond in DMs.');
+    }
+
+    // Check if it's a server message
+    else {
+        // your server command handling here
+    }
+});
+
+client.login('YOUR_BOT_TOKEN');
