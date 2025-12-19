@@ -5,26 +5,36 @@ import {
   EmbedBuilder 
 } from "discord.js";
 
+// Client with DM support
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.DirectMessages],
+  partials: ['CHANNEL'], // required to receive DMs
 });
 
 client.once("ready", async () => {
   console.log(`Logged in as ${client.user.tag}`);
 
+  // Slash command registration (global)
   const command = new SlashCommandBuilder()
     .setName("botmsg")
-    .setDescription("Send a message or embed")
-    .addStringOption(o =>
-      o.setName("text").setDescription("Message text").setRequired(true)
+    .setDescription("Send a message or embed using the bot")
+    .addStringOption(option =>
+      option.setName("text")
+        .setDescription("Message text")
+        .setRequired(true)
     )
-    .addBooleanOption(o =>
-      o.setName("embed").setDescription("Use embed").setRequired(true)
+    .addBooleanOption(option =>
+      option.setName("embed")
+        .setDescription("Send as embed?")
+        .setRequired(true)
     )
-    .addStringOption(o =>
-      o.setName("image").setDescription("Optional image URL")
+    .addStringOption(option =>
+      option.setName("image")
+        .setDescription("Optional image URL")
+        .setRequired(false)
     );
 
+  // Global commands work in both servers and DMs eventually
   await client.application.commands.set([command]);
 });
 
@@ -36,8 +46,10 @@ client.on("interactionCreate", async interaction => {
   const embedEnabled = interaction.options.getBoolean("embed");
   const image = interaction.options.getString("image");
 
+  // Embed or normal message
   if (!embedEnabled) {
-    return interaction.reply(text);
+    await interaction.reply({ content: text, ephemeral: false });
+    return;
   }
 
   const embed = new EmbedBuilder()
@@ -46,7 +58,7 @@ client.on("interactionCreate", async interaction => {
 
   if (image) embed.setImage(image);
 
-  interaction.reply({ embeds: [embed] });
+  await interaction.reply({ embeds: [embed] });
 });
 
 client.login(process.env.TOKEN);
